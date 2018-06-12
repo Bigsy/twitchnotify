@@ -1,0 +1,1 @@
+Chrome extension written in clojureScript which will trigger a chrome notification when a twitch streamer switches game.

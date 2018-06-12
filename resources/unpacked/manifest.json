@@ -1,0 +1,39 @@
+/* this manifest is for development only
+   we include all files individually
+   also we allow unsafe eval for figwheel
+*/
+{
+  "name": "Twitch Game Switch Notify",
+  "version": "0.1.0",
+  "browser_action": {
+    "default_icon": {
+      "19": "images/twitch24gc.png",
+      "38": "images/twitch38gc.png"
+    }
+  },
+  "icons": {
+    "16": "images/twitch16gc.png",
+    "48": "images/twitch48gc.png",
+    "128": "images/twitch128goc.png"
+  },
+  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.twitch.tv/*", "https://static-cdn.jtvnw.net/*"
+      ],
+      "js": [
+        "compiled/content-script/main.js"
+      ],
+      "run_at": "document_end"
+    }
+  ],
+  "background": {
+    "page": "background.html",
+    "persistent": false
+  },
+  "permissions": [
+    "storage", "notifications"
+  ],
+  "manifest_version": 2
+}
