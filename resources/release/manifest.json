@@ -1,6 +1,6 @@
 {
   "name": "Twitch Game Switch Notify",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "browser_action": {
     "default_icon": {
       "19": "images/twitch19gc.png",

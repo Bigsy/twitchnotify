@@ -39,39 +39,33 @@
 (defn game-changed? [current-state game-name]
   (not= game-name (:game-name current-state)))
 
-(defn notify? [{:keys [url], {:keys [id]} :tab} message]
-
+(defn notify? [{{:keys [id]} :tab} message]
   (let [current-state @stream-state
         game-name     (:game-name message)]
-    (if-let [tab ((keyword url) current-state)]
+    (if-let [tab (current-state id)]
       (if (game-changed? tab game-name)
-        (do
-          (swap! stream-state (fn [x]
-                                (merge x {(keyword url) {:id           id
-                                                         :streamer-img ""
-                                                         :game-name    game-name}}))) true) false)
+        (do (swap! stream-state (fn [x]
+                                  (merge x {id {:game-name game-name}}))) true)
+        false)
       (do (swap! stream-state (fn [x]
-                                (merge x {(keyword url) {:id           id
-                                                         :streamer-img ""
-                                                         :game-name    game-name}}))) false))))
+                                (merge x {id {:game-name game-name}}))) false))))
+
+(defn remove-entry [id]
+  (let [current-state @stream-state]
+    (if (current-state id)
+      (swap! stream-state (fn [x]
+                            (dissoc x id))))))
+
 
 (defn run-client-message-loop! [client]
   (go-loop []
     (when-some [message (js->clj (<! client) :keywordize-keys true)]
-      (let [sender (js->clj (get-sender client) :keywordize-keys true)
-            enabled? (<! (ms/pull "active"))
+      (let [sender       (js->clj (get-sender client) :keywordize-keys true)
+            enabled?     (<! (ms/pull "active"))
             message-type (:message-type message)
-            game-name (:game-name message)
-            stream-img (:stream-img message)
-            stream-name (:stream-name message)]
-        (log "message: " message)
-        (log "sender:" sender)
-        (log "enabled?:" enabled?)
-        (log "img:" stream-img)
-        (log "name:" stream-name)
-
-
-
+            game-name    (:game-name message)
+            stream-img   (:stream-img message)
+            stream-name  (:stream-name message)]
 
         (if (and (= message-type "game-update") (notify? sender message) enabled?)
           (not/create "2" (clj->js {:type           "basic"
@@ -91,6 +85,7 @@
     (case event-id
       ::runtime/on-connect (apply handle-client-connection! event-args)
       ::ba/on-clicked (enable-disable)
+      ::tabs/on-removed (remove-entry (first (second event)))
       nil)))
 
 (defn run-chrome-event-loop! [chrome-event-channel]
@@ -113,9 +108,9 @@
 
 ;--------------
 (comment
-  (let [data1      {:url "wibble1" :tab {:id 1}}
-        data1-1    {:url "wibble1" :tab {:id 1}}
-        data2      {:url "wibble2" :tab {:id 2}}
+  (let [data1      {:tab {:id 1}}
+        data1-1    {:tab {:id 1}}
+        data2      {:tab {:id 2}}
 
         message1   {:game-name "1"}
         message1-1 {:game-name "2"}
@@ -125,5 +120,9 @@
     (assert (notify? data1-1 message1-1))
     (assert (false? (notify? data1-1 message1-1)))
     (assert (false? (notify? data2 message2)))
-    (assert (false? (notify? data2 message2)))))
+    (assert (false? (notify? data2 message2)))
+    (remove-entry 1)
+    (assert (false? (notify? data1 message1)))))
+
+
 

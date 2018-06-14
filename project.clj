@@ -34,7 +34,6 @@
   ;                             :optimizations :none
   ;                             :source-map    true}}}}
 
-  ; prevent https://github.com/emezeske/lein-cljsbuild/issues/413
 
   :profiles {:unpacked
              {:cljsbuild {:builds

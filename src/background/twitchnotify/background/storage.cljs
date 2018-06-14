@@ -15,5 +15,3 @@
         (if error
           (error "fetch " k " error:" error)
           (get (js->clj items) k)))))
-
-
